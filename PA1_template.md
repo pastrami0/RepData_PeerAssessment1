@@ -18,7 +18,8 @@ The data for this assignment was downloaded from the course web site:
 
 First we will read the data into R, into a table called `data`, and we process the `date` and `interval` character fields into R-friendly formats.
 
-```{r message=FALSE}
+
+```r
 library(dplyr)
 data <- read.csv("activity.csv", 
                  colClasses = c('numeric', 'character', 'numeric'))
@@ -31,20 +32,38 @@ data$timeofday <- data$interval %/% 100 * 60 * 60 + data$interval %% 100 * 60
 
 Next we calculate the mean total number of steps taken per day and plot a histogram, ignoring missing values. 
 
-```{r}
+
+```r
 TotalStepsPerDay <- data %>% group_by(date) %>% summarize(TotalSteps=sum(steps))
 hist(TotalStepsPerDay$TotalSteps)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
+```r
 mean(TotalStepsPerDay$TotalSteps, na.rm=TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(TotalStepsPerDay$TotalSteps, na.rm=TRUE)
 ```
 
-The mean and median of these calculations are `r mean(TotalStepsPerDay$TotalSteps, na.rm=TRUE)` and `r median(TotalStepsPerDay$TotalSteps, na.rm=TRUE)`, respectively.
+```
+## [1] 10765
+```
+
+The mean and median of these calculations are 1.0766189\times 10^{4} and 1.0765\times 10^{4}, respectively.
 
 ## What is the average daily activity pattern?
 
 Here we calculate the mean steps for each 5-minute interval, averaged across all the days recorded. This is then plotted in a "time series". The interval with the highest mean steps is 8:35. 
 
-```{r}
+
+```r
 AveDailyActivity <- data %>% group_by(interval) %>% 
    summarize(MeanSteps = mean(steps, na.rm=TRUE))
 AveDailyActivity$timeofday <- strptime(paste(AveDailyActivity$interval %/% 100,
@@ -52,7 +71,16 @@ AveDailyActivity$timeofday <- strptime(paste(AveDailyActivity$interval %/% 100,
                                        "%H %M")
 plot(AveDailyActivity$timeofday, AveDailyActivity$MeanSteps, 
      type="l", xlab="time of day", ylab="mean steps per 5-min interval")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
+```r
 AveDailyActivity$interval[which.max(AveDailyActivity$MeanSteps)]
+```
+
+```
+## [1] 835
 ```
 
 
@@ -60,8 +88,16 @@ AveDailyActivity$interval[which.max(AveDailyActivity$MeanSteps)]
 
 We find that there are `sum(is.na(data$steps))` missing values. We deal with these by creating a new data table, `data2`, in which we impute the number of steps by using the mean for that 5-minute interval. We again calculate the total steps taken per day with the newly imputed information, output a histogram of this data, and re-calculate mean and median. 
 
-```{r}
+
+```r
 sum(is.na(data$steps))
+```
+
+```
+## [1] 2304
+```
+
+```r
 RowsToImpute <- is.na(data$steps)
 IntervalsToImpute <- data$interval[is.na(data$steps)]
 data2 <- data
@@ -71,9 +107,24 @@ data2$imputedsteps[RowsToImpute] <-
 TotalStepsPerDay2 <- data2 %>% group_by(date) %>%
    summarize(TotalSteps=sum(imputedsteps))
 hist(TotalStepsPerDay2$TotalSteps)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+```r
 mean(TotalStepsPerDay2$TotalSteps, na.rm=TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(TotalStepsPerDay2$TotalSteps, na.rm=TRUE)
+```
+
+```
+## [1] 10766.19
 ```
 
 
@@ -81,7 +132,8 @@ median(TotalStepsPerDay2$TotalSteps, na.rm=TRUE)
 
 Lastly we plot the mean steps per 5-minute interval for weekdays separate from weekends. 
 
-```{r fig.height=7.5}
+
+```r
 data2$weekday <- factor(weekdays(data2$date) %in% c("Saturday", "Sunday"), labels=c("weekday", "weekend"))
 
 AveDailyActivity2 <- data2 %>% group_by(interval, weekday) %>%
@@ -101,4 +153,6 @@ plot(AveDailyActivity2$timeofday[AveDailyActivity2$weekday=="weekend"],
      type="l", xlab="time of day", ylab="mean steps per 5-min interval",
      main='weekend')
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
